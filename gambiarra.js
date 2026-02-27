@@ -1,62 +1,66 @@
 (function() {
-    const targetId = "interaction-header-participant-name";
     const buttonClass = "btn-abrir-cliente-custom";
 
-    function injectButton() {
-        const header = document.getElementById(targetId);
-        if (!header) return;
-
-        // Evita duplicados: verifica se o botão já existe dentro deste elemento
-        if (header.querySelector(`.${buttonClass}`)) return;
-
-        // Extrai o ID (o número dentro do último par de colchetes)
-        const text = header.innerText;
-        const matches = text.match(/\[(\d+)\]/g);
+    function criarBotao(idCliente) {
+        const btn = document.createElement("button");
+        btn.innerText = "Abrir Cliente";
+        btn.className = buttonClass;
         
-        if (matches && matches.length > 0) {
-            // Pega o último par de colchetes, remove os [ ] e extrai o número
-            const lastMatch = matches[matches.length - 1];
-            const idCliente = lastMatch.replace(/[\[\]]/g, '');
+        // Estilo para não quebrar o layout do H2
+        btn.style.marginLeft = "10px";
+        btn.style.padding = "2px 8px";
+        btn.style.backgroundColor = "#28a745"; // Verde
+        btn.style.color = "white";
+        btn.style.border = "none";
+        btn.style.borderRadius = "4px";
+        btn.style.cursor = "pointer";
+        btn.style.fontSize = "12px";
+        btn.style.verticalAlign = "middle";
 
-            // Cria o botão
-            const btn = document.createElement("button");
-            btn.innerText = "Abrir Cliente";
-            btn.className = buttonClass;
+        btn.onclick = (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            const url = `https://novorevan.brisanet.net.br/#/venda/cliente/${idCliente}/sobre`;
+            window.open(url, '_blank');
+        };
+        return btn;
+    }
+
+    function processarHeader() {
+        const header = document.getElementById("interaction-header-participant-name");
+        
+        if (header) {
+            // Verifica se o botão já está lá para evitar loops
+            if (header.querySelector(`.${buttonClass}`)) return;
+
+            // Extrai o ID do texto: busca o padrão [números]
+            // Ex: Alvaro - -[600mb_20gb_99]-[1231231] -> pega 1231231
+            const text = header.innerText;
+            const matches = text.match(/\[(\d+)\]/g);
             
-            // Estilização básica para o botão ficar visível e bonito
-            btn.style.marginLeft = "15px";
-            btn.style.padding = "5px 10px";
-            btn.style.backgroundColor = "#007bff";
-            btn.style.color = "white";
-            btn.style.border = "none";
-            btn.style.borderRadius = "4px";
-            btn.style.cursor = "pointer";
-            btn.style.fontSize = "14px";
+            if (matches) {
+                // Pega o último match (geralmente o ID do cliente)
+                const lastMatch = matches[matches.length - 1];
+                const idCliente = lastMatch.replace(/[\[\]]/g, '');
 
-            // Ação de abrir o link
-            btn.onclick = (e) => {
-                e.preventDefault();
-                const url = `https://novorevan.brisanet.net.br/#/venda/cliente/${idCliente}/sobre`;
-                window.open(url, '_blank');
-            };
-
-            // Insere o botão no H2
-            header.appendChild(btn);
-            console.log("Botão 'Abrir Cliente' injetado para o ID:", idCliente);
+                const btn = criarBotao(idCliente);
+                header.appendChild(btn);
+            }
         }
     }
 
-    // Configura o observador para monitorar mudanças no DOM (atualizações da página)
+    // O MutationObserver observa se algo mudou na tela
     const observer = new MutationObserver(() => {
-        injectButton();
+        processarHeader();
     });
 
-    // Começa a observar o corpo da página para mudanças
+    // Configura para observar mudanças em toda a árvore de elementos
     observer.observe(document.body, {
         childList: true,
-        subtree: true
+        subtree: true,
+        characterData: true // Observa se o texto interno mudou
     });
 
-    // Executa uma vez ao carregar o script
-    injectButton();
+    // Execução inicial
+    processarHeader();
 })();
