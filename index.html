@@ -3,246 +3,116 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GAMBIARRA_REMOTE_V4</title>
+    <title>Abertura de Ativos</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=VT323&display=swap');
-
         :root {
-            --bg-color: #020202;
-            --neon-green: #39ff14;
-            --neon-pink: #ff00ff;
-            --neon-blue: #00ffff;
-            --vhs-gray: #d1d1d1;
+            --primary: #f97316;
+            --primary-hover: #ea580c;
+            --text-main: #1e293b;
+            --text-secondary: #64748b;
+            --bg: #fdfdfd;
         }
 
-        body, html {
-            margin: 0; padding: 0;
-            width: 100%; height: 100%;
-            background: var(--bg-color);
-            color: var(--neon-green);
-            font-family: 'VT323', monospace;
-            overflow: hidden;
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg);
+            height: 100vh;
             display: flex;
             align-items: center;
             justify-content: center;
+            color: var(--text-main);
         }
 
-        /* EFEITOS VHS */
-        .vhs-noise {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            z-index: 100; pointer-events: none; opacity: 0.15;
-            background: url('https://media.giphy.com/media/oEI9uWUicG3Y166A7v/giphy.gif');
-        }
-
-        .scanlines {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.5) 50%), 
-                        linear-gradient(90deg, rgba(255, 0, 0, 0.05), rgba(0, 255, 0, 0.03), rgba(0, 0, 255, 0.05));
-            background-size: 100% 3px, 3px 100%;
-            z-index: 101; pointer-events: none;
-        }
-
-        /* OSD - ON SCREEN DISPLAY */
-        .osd {
-            position: absolute; top: 30px; left: 40px;
-            font-size: 2.2rem; color: var(--vhs-gray);
-            text-shadow: 3px 3px #000; z-index: 50;
-        }
-
-        .osd-rec {
-            position: absolute; top: 30px; right: 40px;
-            color: #ff0000; font-size: 2.2rem;
-            animation: blink 1s steps(2) infinite;
-        }
-
-        /* LOGO DVD GAMBIARRA - DINÂMICO */
-        #dvd-container {
-            position: absolute; top: 0; left: 0;
-            width: 100vw; height: 100vh; z-index: 5;
-        }
-
-        .dvd-logo {
-            position: absolute;
-            font-size: clamp(6rem, 22vw, 28rem); 
-            font-weight: 900;
-            white-space: nowrap;
-            color: var(--neon-pink);
-            text-shadow: 12px 12px 0px #000;
-            font-style: italic;
-            letter-spacing: -10px;
-            filter: drop-shadow(0 0 25px var(--neon-pink));
-            line-height: 0.7;
-            user-select: none;
-            will-change: transform;
-        }
-
-        /* CARD CENTRAL */
-        .main-frame {
-            position: relative;
-            z-index: 150;
-            border: 8px double var(--neon-green);
+        /* Container Slim */
+        .container {
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(0, 0, 0, 0.05);
+            border-radius: 24px;
             padding: 40px;
-            background: rgba(0, 0, 0, 0.98);
-            box-shadow: 0 0 50px rgba(57, 255, 20, 0.4);
-            width: 90%;
-            max-width: 550px;
+            width: 100%;
+            max-width: 380px;
             text-align: center;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.03);
         }
 
         h1 {
-            font-size: 3rem;
-            margin: 0 0 10px 0;
-            color: var(--neon-blue);
-            text-shadow: 4px 4px 0px #000;
-            text-transform: uppercase;
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 8px;
+            letter-spacing: -0.5px;
         }
 
-        /* TRUQUE DO BOTÃO: MOSTRA UM TEXTO, DRAGA OUTRO */
+        p {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            margin-bottom: 32px;
+        }
+
+        /* O Botão - O texto dentro dele define o nome do favorito ao arrastar */
         .bookmark-btn {
             display: inline-block;
-            margin: 30px 0;
-            padding: 25px 40px;
-            border: 4px solid var(--neon-green);
-            background: transparent;
-            color: var(--neon-green);
+            width: 100%;
+            background: var(--primary);
+            color: #fff;
             text-decoration: none;
-            font-size: 0; /* Esconde o texto real "ativar" */
-            font-weight: 900;
+            padding: 14px;
+            border-radius: 12px;
+            font-weight: 600;
+            font-size: 1rem;
+            transition: all 0.2s ease;
             cursor: grab;
-            transition: all 0.1s;
-            box-shadow: 10px 10px 0px #000;
-            text-transform: uppercase;
-            position: relative;
-        }
-
-        .bookmark-btn::after {
-            content: "instalar gambiarra"; /* Texto que o usuário vê */
-            font-size: 2.5rem;
-            display: block;
+            box-shadow: 0 4px 12px rgba(249, 115, 22, 0.2);
         }
 
         .bookmark-btn:hover {
-            background: var(--neon-green);
-            color: #000;
-            box-shadow: 0 0 60px var(--neon-green);
-            transform: translate(-5px, -5px);
+            background: var(--primary-hover);
+            transform: translateY(-1px);
+            box-shadow: 0 6px 15px rgba(249, 115, 22, 0.3);
         }
 
-        .terminal-text {
-            font-size: 1.3rem;
-            line-height: 1.4;
-            text-align: left;
-            border-top: 2px solid var(--neon-green);
-            padding-top: 20px;
+        .bookmark-btn:active {
+            cursor: grabbing;
         }
 
-        @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
-
-        /* CINTILAÇÃO CRT */
-        body::after {
-            content: "";
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(255, 255, 255, 0.03);
-            pointer-events: none; z-index: 200;
-            animation: flicker 0.1s infinite;
-        }
-        @keyframes flicker {
-            0% { opacity: 0.1; } 50% { opacity: 0.15; } 100% { opacity: 0.1; }
+        /* Pequeno indicador visual de arraste */
+        .hint {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            margin-top: 12px;
+            font-size: 0.75rem;
+            color: #cbd5e1;
         }
     </style>
 </head>
 <body>
 
-    <div class="vhs-noise"></div>
-    <div class="scanlines"></div>
+    <div class="container">
+        <h1>Abertura de Ativos</h1>
+        <p>Arraste o botão abaixo para ativar</p>
 
-    <div class="osd">
-        PLAY  00:00:15:23<br>
-        REMOTE_INJECTOR
-    </div>
-    <div class="osd-rec">● REC</div>
+        <!-- O texto "ativar" será o nome do favorito no navegador -->
+        <a class="bookmark-btn" href="javascript:(function(){  var s=document.createElement('script');  s.src='https://gambiarra.pages.dev/gambiarra.js';  s.type='text/javascript';  document.body.appendChild(s);})();">
+            ativar
+        </a>
 
-    <div id="dvd-container">
-        <div id="gambiarra" class="dvd-logo">GAMBIARRA</div>
-    </div>
-
-    <div class="main-frame">
-        <h1>REVAN_OS_LINKER</h1>
-        <p style="letter-spacing: 2px;">VIBRATION: ON | SOURCE: REMOTE</p>
-
-        <!-- O LINK CONTÉM "ativar", MAS O CSS MOSTRA "instalar gambiarra" -->
-        <a class="bookmark-btn" href="javascript:(function(){  var s=document.createElement('script');  s.src='https://gambiarra.pages.dev/gambiarra.js';  s.type='text/javascript';  document.body.appendChild(s);})();">ativar</a>
-
-        <div class="terminal-text">
-            > SISTEMA: PRONTO PARA INSTALAÇÃO<br>
-            > AÇÃO: ARRASTE O BOTÃO ACIMA<br>
-            > NOME DO FAVORITO: "ativar"<br>
-            > USER_AUTH: GRANTED_<span style="animation: blink 0.8s infinite">█</span>
+        <div class="hint">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M7 11l5-5m0 0l5 5m-5-5v12"></path></svg>
+            solte na barra de favoritos
         </div>
     </div>
 
-    <script>
-        const logo = document.getElementById('gambiarra');
-        
-        // Física DVD Player
-        let speed = 4; 
-        let xSpeed = speed * (Math.random() > 0.5 ? 1 : -1);
-        let ySpeed = (speed * 0.8) * (Math.random() > 0.5 ? 1 : -1);
-        
-        let x = Math.random() * (window.innerWidth - 400);
-        let y = Math.random() * (window.innerHeight - 200);
-        
-        const neonColors = ['#ff00ff', '#00ffff', '#39ff14', '#ffff00', '#ff3300', '#0066ff'];
-        let colorIndex = 0;
-
-        function update() {
-            x += xSpeed;
-            y += ySpeed;
-
-            const rect = logo.getBoundingClientRect();
-            const width = rect.width;
-            const height = rect.height;
-
-            if (x + width >= window.innerWidth || x <= 0) {
-                xSpeed *= -1;
-                x = x <= 0 ? 0 : window.innerWidth - width;
-                addDrift();
-                hit();
-            }
-
-            if (y + height >= window.innerHeight || y <= 0) {
-                ySpeed *= -1;
-                y = y <= 0 ? 0 : window.innerHeight - height;
-                addDrift();
-                hit();
-            }
-
-            logo.style.transform = `translate(${x}px, ${y}px)`;
-            requestAnimationFrame(update);
-        }
-
-        function addDrift() {
-            xSpeed += (Math.random() - 0.5) * 0.4;
-            ySpeed += (Math.random() - 0.5) * 0.4;
-        }
-
-        function hit() {
-            colorIndex = (colorIndex + 1) % neonColors.length;
-            const c = neonColors[colorIndex];
-            logo.style.color = c;
-            logo.style.filter = `drop-shadow(0 0 35px ${c})`;
-            
-            const frame = document.querySelector('.main-frame');
-            frame.style.borderColor = c;
-            setTimeout(() => { frame.style.borderColor = 'var(--neon-green)'; }, 100);
-        }
-
-        window.addEventListener('resize', () => {
-            x = Math.min(x, window.innerWidth - logo.offsetWidth);
-            y = Math.min(y, window.innerHeight - logo.offsetHeight);
-        });
-
-        update();
-    </script>
 </body>
 </html>

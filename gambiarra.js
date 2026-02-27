@@ -16,7 +16,7 @@
         botao.id = BUTTON_ID;
         botao.innerText = "Abrir Cliente";
         botao.style.marginLeft = "10px";
-        botao.style.padding = "4px 8px";
+        botao.style.marginTop= "5px";
         botao.style.cursor = "pointer";
         botao.style.opacity = "0.5";
         botao.disabled = true;
