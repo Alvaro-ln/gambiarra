@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GAMBIARRA_SYSTEM_V1.0</title>
+    <style>
+        /* Importando fonte mono para cara de terminal antigo */
+        @import url('https://fonts.googleapis.com/css2?family=VT323&display=swap');
+
+        :root {
+            --bg-color: #0a0a0a;
+            --neon-green: #39ff14;
+            --neon-pink: #ff00ff;
+            --neon-blue: #00ffff;
+            --vhs-gray: #aaaaaa;
+        }
+
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            background: var(--bg-color);
+            color: var(--neon-green);
+            font-family: 'VT323', monospace;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Camada de Interferência VHS */
+        .vhs-noise {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            z-index: 100;
+            pointer-events: none;
+            opacity: 0.08;
+            background: url('https://media.giphy.com/media/oEI9uWUicG3Y166A7v/giphy.gif');
+        }
+
+        .scanlines {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: linear-gradient(
+                rgba(18, 16, 16, 0) 50%, 
+                rgba(0, 0, 0, 0.25) 50%
+            ), linear-gradient(
+                90deg, 
+                rgba(255, 0, 0, 0.06), 
+                rgba(0, 255, 0, 0.02), 
+                rgba(0, 0, 255, 0.06)
+            );
+            background-size: 100% 3px, 3px 100%;
+            z-index: 101;
+            pointer-events: none;
+        }
+
+        /* On-Screen Display (VHS Text) */
+        .osd {
+            position: absolute;
+            top: 30px;
+            left: 40px;
+            font-size: 2rem;
+            color: var(--vhs-gray);
+            text-shadow: 2px 2px #000;
+            z-index: 50;
+        }
+
+        .osd-rec {
+            position: absolute;
+            top: 30px;
+            right: 40px;
+            color: red;
+            animation: blink 1s steps(2) infinite;
+        }
+
+        /* Logo DVD Bouncing */
+        #dvd-container {
+            position: absolute;
+            top: 0; left: 0; width: 100vw; height: 100vh;
+            z-index: 5;
+        }
+
+        .dvd-logo {
+            position: absolute;
+            font-size: 4rem;
+            font-weight: 900;
+            white-space: nowrap;
+            color: var(--neon-pink);
+            text-shadow: 4px 4px 0px #000;
+            font-style: italic;
+            letter-spacing: -2px;
+            filter: drop-shadow(0 0 5px var(--neon-pink));
+        }
+
+        /* Interface Central */
+        .main-frame {
+            position: relative;
+            z-index: 150;
+            border: 4px double var(--neon-green);
+            padding: 30px;
+            background: #000;
+            box-shadow: 0 0 20px rgba(57, 255, 20, 0.2);
+            max-width: 400px;
+            text-align: center;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            margin-top: 0;
+            color: var(--neon-blue);
+            text-transform: uppercase;
+        }
+
+        /* Botão Estilo Retro-Hacker */
+        .bookmark-btn {
+            display: inline-block;
+            margin: 20px 0;
+            padding: 15px 25px;
+            border: 2px solid var(--neon-green);
+            background: transparent;
+            color: var(--neon-green);
+            text-decoration: none;
+            font-size: 1.8rem;
+            font-weight: bold;
+            text-transform: uppercase;
+            cursor: grab;
+            transition: all 0.2s;
+            position: relative;
+        }
+
+        .bookmark-btn:hover {
+            background: var(--neon-green);
+            color: #000;
+            box-shadow: 0 0 30px var(--neon-green);
+        }
+
+        .bookmark-btn:active {
+            cursor: grabbing;
+            transform: scale(0.95);
+        }
+
+        .terminal-text {
+            font-size: 1.1rem;
+            line-height: 1.2;
+            text-align: left;
+            border-top: 1px solid var(--neon-green);
+            padding-top: 15px;
+            color: var(--neon-green);
+        }
+
+        .cursor {
+            display: inline-block;
+            width: 10px;
+            height: 1.2rem;
+            background: var(--neon-green);
+            animation: blink 0.8s infinite;
+            vertical-align: middle;
+        }
+
+        @keyframes blink {
+            0% { opacity: 1; }
+            50% { opacity: 0; }
+        }
+
+        /* Flicker da tela */
+        @keyframes flicker {
+            0% { opacity: 0.97; }
+            5% { opacity: 0.95; }
+            10% { opacity: 0.9; }
+            15% { opacity: 0.98; }
+            100% { opacity: 1; }
+        }
+
+        body::after {
+            content: " ";
+            position: fixed;
+            top: 0; left: 0; bottom: 0; right: 0;
+            background: rgba(18, 16, 16, 0.1);
+            opacity: 0;
+            z-index: 200;
+            pointer-events: none;
+            animation: flicker 0.15s infinite;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="vhs-noise"></div>
+    <div class="scanlines"></div>
+
+    <!-- OSD Estilo Fita Cassete -->
+    <div class="osd">
+        PLAY  00:04:20:15<br>
+        SP  --/--/--
+    </div>
+    <div class="osd-rec">● REC</div>
+
+    <!-- Logo DVD Bouncing -->
+    <div id="dvd-container">
+        <div id="gambiarra" class="dvd-logo">GAMBIARRA</div>
+    </div>
+
+    <!-- Interface Principal -->
+    <div class="main-frame">
+        <h1>REVAN_LINKER.EXE</h1>
+        
+        <p>CONEXÃO ESTABELECIDA...</p>
+
+        <a class="bookmark-btn" href="javascript:(function(){var h=document.querySelector('#interaction-header-participant-name');if(!h)return;var t=h.innerHTML;var r=/\[(\d+)\]/g;h.innerHTML=t.replace(r,function(m,id){var u='https://novorevan.brisanet.net.br/#/venda/cliente/'+id+'/sobre';return'[<a href=\x22'+u+'\x22 target=\x22_blank\x22 style=\x22color:#00bfff;font-weight:bold;\x22>'+id+'</a>]';});})();">
+            [ ARRASTE-ME ]
+        </a>
+
+        <div class="terminal-text">
+            > INSTRUÇÃO: ARRASTE PARA A BARRA DE FAVORITOS<br>
+            > STATUS: AGUARDANDO COMANDO<br>
+            > SOURCE: BRISANET_NET_BR<br>
+            > USER_AUTH: GRANTED_<span class="cursor"></span>
+        </div>
+    </div>
+
+    <script>
+        // Lógica do Logo DVD Bouncing
+        const gambiarra = document.getElementById('gambiarra');
+        let x = Math.random() * (window.innerWidth - 250);
+        let y = Math.random() * (window.innerHeight - 100);
+        let xSpeed = 3;
+        let ySpeed = 3;
+        
+        const neonColors = ['#ff00ff', '#00ffff', '#39ff14', '#ffff00', '#ff0000'];
+        let colorIndex = 0;
+
+        function animate() {
+            x += xSpeed;
+            y += ySpeed;
+
+            if (x + gambiarra.clientWidth >= window.innerWidth || x <= 0) {
+                xSpeed = -xSpeed;
+                hitWall();
+            }
+            if (y + gambiarra.clientHeight >= window.innerHeight || y <= 0) {
+                ySpeed = -ySpeed;
+                hitWall();
+            }
+
+            gambiarra.style.left = x + 'px';
+            gambiarra.style.top = y + 'px';
+            requestAnimationFrame(animate);
+        }
+
+        function hitWall() {
+            colorIndex = (colorIndex + 1) % neonColors.length;
+            gambiarra.style.color = neonColors[colorIndex];
+            gambiarra.style.filter = `drop-shadow(0 0 10px ${neonColors[colorIndex]})`;
+            
+            // Pequeno glitch visual no card quando o logo bate na parede
+            document.querySelector('.main-frame').style.borderColor = neonColors[colorIndex];
+            setTimeout(() => {
+                document.querySelector('.main-frame').style.borderColor = 'var(--neon-green)';
+            }, 100);
+        }
+
+        animate();
+
+        // Reposicionar se a janela mudar de tamanho
+        window.addEventListener('resize', () => {
+            x = Math.min(x, window.innerWidth - 250);
+            y = Math.min(y, window.innerHeight - 100);
+        });
+    </script>
+</body>
+</html>
