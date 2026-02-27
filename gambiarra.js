@@ -1,66 +1,72 @@
-(function() {
-    const buttonClass = "btn-abrir-cliente-custom";
+(function () {
+    const TARGET_ID = "interaction-header-participant-name";
+    const BUTTON_ID = "btn-novorevan-cliente";
 
-    function criarBotao(idCliente) {
-        const btn = document.createElement("button");
-        btn.innerText = "Abrir Cliente";
-        btn.className = buttonClass;
-        
-        // Estilo para não quebrar o layout do H2
-        btn.style.marginLeft = "10px";
-        btn.style.padding = "2px 8px";
-        btn.style.backgroundColor = "#28a745"; // Verde
-        btn.style.color = "white";
-        btn.style.border = "none";
-        btn.style.borderRadius = "4px";
-        btn.style.cursor = "pointer";
-        btn.style.fontSize = "12px";
-        btn.style.verticalAlign = "middle";
-
-        btn.onclick = (e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            const url = `https://novorevan.brisanet.net.br/#/venda/cliente/${idCliente}/sobre`;
-            window.open(url, '_blank');
-        };
-        return btn;
+    function extrairIdCliente(texto) {
+        // Procura padrão: -[qualquercoisa]-[1231231]
+        const regex = /\-\[[^\]]+\]\-\[(\d+)\]/;
+        const match = texto.match(regex);
+        return match ? match[1] : null;
     }
 
-    function processarHeader() {
-        const header = document.getElementById("interaction-header-participant-name");
-        
-        if (header) {
-            // Verifica se o botão já está lá para evitar loops
-            if (header.querySelector(`.${buttonClass}`)) return;
+    function criarBotao() {
+        if (document.getElementById(BUTTON_ID)) return;
 
-            // Extrai o ID do texto: busca o padrão [números]
-            // Ex: Alvaro - -[600mb_20gb_99]-[1231231] -> pega 1231231
-            const text = header.innerText;
-            const matches = text.match(/\[(\d+)\]/g);
-            
-            if (matches) {
-                // Pega o último match (geralmente o ID do cliente)
-                const lastMatch = matches[matches.length - 1];
-                const idCliente = lastMatch.replace(/[\[\]]/g, '');
+        const botao = document.createElement("button");
+        botao.id = BUTTON_ID;
+        botao.innerText = "Abrir Cliente";
+        botao.style.marginLeft = "10px";
+        botao.style.padding = "4px 8px";
+        botao.style.cursor = "pointer";
 
-                const btn = criarBotao(idCliente);
-                header.appendChild(btn);
-            }
+        botao.disabled = true;
+
+        const h2 = document.getElementById(TARGET_ID);
+        if (h2) {
+            h2.parentNode.insertBefore(botao, h2.nextSibling);
         }
     }
 
-    // O MutationObserver observa se algo mudou na tela
-    const observer = new MutationObserver(() => {
-        processarHeader();
-    });
+    function atualizarBotao() {
+        const h2 = document.getElementById(TARGET_ID);
+        const botao = document.getElementById(BUTTON_ID);
 
-    // Configura para observar mudanças em toda a árvore de elementos
-    observer.observe(document.body, {
-        childList: true,
-        subtree: true,
-        characterData: true // Observa se o texto interno mudou
-    });
+        if (!h2 || !botao) return;
 
-    // Execução inicial
-    processarHeader();
+        const texto = h2.innerText.trim();
+        const idCliente = extrairIdCliente(texto);
+
+        if (idCliente) {
+            botao.disabled = false;
+            botao.onclick = function () {
+                const url = `https://novorevan.brisanet.net.br/#/venda/cliente/${idCliente}/sobre`;
+                window.open(url, "_blank");
+            };
+            botao.style.opacity = "1";
+        } else {
+            botao.disabled = true;
+            botao.onclick = null;
+            botao.style.opacity = "0.5";
+        }
+    }
+
+    function iniciarObservador() {
+        const target = document.body;
+
+        const observer = new MutationObserver(() => {
+            criarBotao();
+            atualizarBotao();
+        });
+
+        observer.observe(target, {
+            childList: true,
+            subtree: true,
+            characterData: true
+        });
+    }
+
+    // Inicialização
+    criarBotao();
+    atualizarBotao();
+    iniciarObservador();
 })();
