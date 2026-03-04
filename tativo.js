@@ -1,8 +1,17 @@
 (function () {
     const TARGET_ID = "interaction-header-participant-name";
     const BUTTON_ID = "btn-novorevan-cliente";
-    // Substitua pela sua URL real após o deploy
     const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbz-hcmhiErTNn3-R_CDi3HzJjCBBiCJ1nChmg-u1oiIPdesEbu0eykke-KtXaJDI1QC/exec"; 
+
+    // --- BLOCO DE SEGURANÇA PARA BOOKMARKLET ---
+    // Se o script já estiver rodando, limpamos o observer e removemos o botão antigo
+    if (window.meuScriptObserver) {
+        window.meuScriptObserver.disconnect();
+        const btnAntigo = document.getElementById(BUTTON_ID);
+        if (btnAntigo) btnAntigo.remove();
+        console.log("Script anterior removido, reiniciando...");
+    }
+    // -------------------------------------------
 
     function extrairIdCliente(texto) {
         const regex = /\-\s*\[(\d+)\]/;
@@ -10,15 +19,11 @@
         return match ? match[1] : null;
     }
 
-    // Função robusta para pegar o nome do operador pela classe estável
     function getNomeOperador() {
         const elements = document.querySelectorAll(".entry-value");
         for (let el of elements) {
             const texto = el.innerText.trim();
-            // Filtro para garantir que pegamos um nome (tamanho > 5 e sem ser apenas números)
-            if (texto.length > 5 && !/^\d+$/.test(texto)) {
-                return texto;
-            }
+            if (texto.length > 5 && !/^\d+$/.test(texto)) return texto;
         }
         return "Operador não detectado";
     }
@@ -30,13 +35,10 @@
         formData.append('nomeOperador', operador);
 
         try {
-            await fetch(GOOGLE_SCRIPT_URL, {
-                method: 'POST',
-                body: formData
-            });
-            console.log("Dados enviados: ", { nome, id, operador });
+            await fetch(GOOGLE_SCRIPT_URL, { method: 'POST', body: formData });
+            console.log("Dados enviados!");
         } catch (error) {
-            console.error("Erro ao enviar para planilha:", error);
+            console.error("Erro ao enviar:", error);
         }
     }
 
@@ -65,10 +67,7 @@
             botao.onclick = () => {
                 const url = `https://novorevan.brisanet.net.br/#/venda/cliente/${idCliente}/sobre`;
                 window.open(url, "_blank");
-                
-                // Captura o operador no momento do clique
-                const operador = getNomeOperador();
-                enviarParaPlanilha(texto, idCliente, operador);
+                enviarParaPlanilha(texto, idCliente, getNomeOperador());
             };
         } else {
             botao.disabled = true;
@@ -77,12 +76,17 @@
         }
     }
 
+    // --- INICIALIZAÇÃO ---
     const observer = new MutationObserver(() => {
         criarBotao();
         atualizarBotao();
     });
 
     observer.observe(document.body, { childList: true, subtree: true, characterData: true });
+    
+    // Guardamos o observer na janela global para poder desconectar depois
+    window.meuScriptObserver = observer; 
+    
     criarBotao();
     atualizarBotao();
 })();
