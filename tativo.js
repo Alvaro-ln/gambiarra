@@ -11,19 +11,23 @@
     }
 
     async function enviarParaPlanilha(nome, id) {
+        // Usamos FormData para simular um formulário clássico
+        // Isso evita problemas de preflight (OPTIONS) e CORS do navegador
+        const formData = new FormData();
+        formData.append('nomeCompleto', nome);
+        formData.append('idCliente', id);
+
         try {
-            const response = await fetch(GOOGLE_SCRIPT_URL, {
+            await fetch(GOOGLE_SCRIPT_URL, {
                 method: 'POST',
-                mode: 'no-cors', // Necessário para evitar problemas de CORS
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ nomeCompleto: nome, idCliente: id })
+                body: formData 
             });
-            console.log("Dados enviados com sucesso!");
+            console.log("Dados enviados!");
         } catch (error) {
-            console.error("Erro ao enviar para planilha:", error);
+            console.error("Erro ao enviar:", error);
         }
     }
-
+    
     function criarBotao() {
         if (document.getElementById(BUTTON_ID)) return;
         const botao = document.createElement("button");
