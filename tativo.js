@@ -3,20 +3,21 @@
     const BUTTON_ID = "btn-novorevan-cliente";
     const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxE9RfXgYUOD3WFDRYTkm9lgh7ygj8ut-s1AQkfEjrdc39u-4gViOg8qceIq0aUcRs/exec"; 
 
-    // --- BLOCO DE SEGURANÇA PARA BOOKMARKLET ---
-    // Se o script já estiver rodando, limpamos o observer e removemos o botão antigo
     if (window.meuScriptObserver) {
         window.meuScriptObserver.disconnect();
         const btnAntigo = document.getElementById(BUTTON_ID);
         if (btnAntigo) btnAntigo.remove();
         console.log("Script anterior removido, reiniciando...");
     }
-    // -------------------------------------------
 
     function extrairIdCliente(texto) {
         const regex = /\-\s*\[(\d+)\]/;
         const match = texto.match(regex);
         return match ? match[1] : null;
+    }
+
+    function isMobileNumberBrazil(texto) {
+        return /mobile number,?\s*brazil/i.test(texto);
     }
 
     function getNomeOperador() {
@@ -53,7 +54,7 @@
         if (h2) h2.parentNode.insertBefore(botao, h2.nextSibling);
     }
 
-    function atualizarBotao() {
+    async function atualizarBotao() {
         const h2 = document.getElementById(TARGET_ID);
         const botao = document.getElementById(BUTTON_ID);
         if (!h2 || !botao) return;
@@ -61,22 +62,53 @@
         const texto = h2.innerText.trim().replace(/\s+/g, ' ');
         const idCliente = extrairIdCliente(texto);
 
+        // Caso normal: ID extraído do próprio texto
         if (idCliente) {
             botao.disabled = false;
             botao.style.opacity = "1";
+            botao.title = "";
             botao.onclick = () => {
                 const url = `https://novorevan.brisanet.net.br/#/venda/cliente/${idCliente}/sobre`;
                 window.open(url, "_blank");
                 enviarParaPlanilha(texto, idCliente, getNomeOperador());
             };
-        } else {
-            botao.disabled = true;
-            botao.style.opacity = "0.5";
-            botao.onclick = null;
+            return;
         }
+
+        // Caso especial: "Mobile Number, Brazil" → usar área de transferência, sem registrar na planilha
+        if (isMobileNumberBrazil(texto)) {
+            botao.disabled = false;
+            botao.style.opacity = "1";
+            botao.title = "Clique para usar o ID da área de transferência";
+            botao.onclick = async () => {
+                let clipboardText = "";
+                try {
+                    clipboardText = await navigator.clipboard.readText();
+                } catch (err) {
+                    alert("Não foi possível acessar a área de transferência.\nCopie o ID do cliente e tente novamente.");
+                    return;
+                }
+
+                const idDaClipboard = clipboardText.trim().replace(/\s+/g, '');
+
+                if (!/^\d+$/.test(idDaClipboard)) {
+                    alert(`Conteúdo da área de transferência inválido:\n"${clipboardText}"\n\nCopie apenas o ID numérico do cliente e tente novamente.`);
+                    return;
+                }
+
+                const url = `https://novorevan.brisanet.net.br/#/venda/cliente/${idDaClipboard}/sobre`;
+                window.open(url, "_blank");
+            };
+            return;
+        }
+
+        // Nenhum ID encontrado e não é Mobile Number
+        botao.disabled = true;
+        botao.style.opacity = "0.5";
+        botao.title = "";
+        botao.onclick = null;
     }
 
-    // --- INICIALIZAÇÃO ---
     const observer = new MutationObserver(() => {
         criarBotao();
         atualizarBotao();
@@ -84,7 +116,6 @@
 
     observer.observe(document.body, { childList: true, subtree: true, characterData: true });
     
-    // Guardamos o observer na janela global para poder desconectar depois
     window.meuScriptObserver = observer; 
     
     criarBotao();
