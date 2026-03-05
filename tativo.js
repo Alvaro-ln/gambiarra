@@ -1,7 +1,7 @@
 (function () {
     const TARGET_ID = "interaction-header-participant-name";
     const BUTTON_ID = "btn-novorevan-cliente";
-    const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbznyk6Iko6uElSZKx5mV9NQpmnDXWPBAAsy8mXz13hZ0YKUuhm9yXqqoKNzmXHLJGun/exec"; 
+    const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbz-hcmhiErTNn3-R_CDi3HzJjCBBiCJ1nChmg-u1oiIPdesEbu0eykke-KtXaJDI1QC/exec"; 
 
     // --- BLOCO DE SEGURANÇA PARA BOOKMARKLET ---
     // Se o script já estiver rodando, limpamos o observer e removemos o botão antigo
@@ -46,7 +46,7 @@
         if (document.getElementById(BUTTON_ID)) return;
         const botao = document.createElement("button");
         botao.id = BUTTON_ID;
-        botao.innerText = "Abrir Cliente e Registrar";
+        botao.innerText = "Abrir Cliente!";
         botao.style.marginLeft = "10px";
         botao.style.cursor = "pointer";
         const h2 = document.getElementById(TARGET_ID);
