@@ -1,7 +1,7 @@
 (function () {
     const TARGET_ID = "interaction-header-participant-name";
     const BUTTON_ID = "btn-novorevan-cliente";
-    const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbz-hcmhiErTNn3-R_CDi3HzJjCBBiCJ1nChmg-u1oiIPdesEbu0eykke-KtXaJDI1QC/exec"; 
+    const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbznyk6Iko6uElSZKx5mV9NQpmnDXWPBAAsy8mXz13hZ0YKUuhm9yXqqoKNzmXHLJGun/exec"; 
 
     // --- BLOCO DE SEGURANÇA PARA BOOKMARKLET ---
     // Se o script já estiver rodando, limpamos o observer e removemos o botão antigo
