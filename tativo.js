@@ -1,7 +1,7 @@
 (function () {
     const TARGET_ID = "interaction-header-participant-name";
     const BUTTON_ID = "btn-novorevan-cliente";
-    const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxE9RfXgYUOD3WFDRYTkm9lgh7ygj8ut-s1AQkfEjrdc39u-4gViOg8qceIq0aUcRs/exec"; 
+    const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxsezOsHZ-htfyu09E9tB6JTce2lrj1qxhvoa3NdtRypv13qhKuLntRXiiOtG2lyP3h/exec"; 
 
     if (window.meuScriptObserver) {
         window.meuScriptObserver.disconnect();
