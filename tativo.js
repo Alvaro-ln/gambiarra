@@ -1,7 +1,8 @@
 (function () {
+
     const TARGET_ID = "interaction-header-participant-name";
     const BUTTON_ID = "btn-novorevan-cliente";
-    const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxsezOsHZ-htfyu09E9tB6JTce2lrj1qxhvoa3NdtRypv13qhKuLntRXiiOtG2lyP3h/exec"; 
+    const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxsezOsHZ-htfyu09E9tB6JTce2lrj1qxhvoa3NdtRypv13qhKuLntRXiiOtG2lyP3h/exec";
 
     if (window.meuScriptObserver) {
         window.meuScriptObserver.disconnect();
@@ -14,6 +15,11 @@
         const regex = /\-\s*\[(\d+)\]/;
         const match = texto.match(regex);
         return match ? match[1] : null;
+    }
+
+    function extrairNomeCliente(texto) {
+        // Remove a parte " - [12345]" do texto para obter só o nome
+        return texto.replace(/\s*\-\s*\[\d+\]/, "").trim();
     }
 
     function isMobileNumberBrazil(texto) {
@@ -34,15 +40,25 @@
         return "Operador não detectado";
     }
 
-    async function enviarParaPlanilha(nome, id, operador) {
-        const formData = new FormData();
-        formData.append('nomeCompleto', nome);
-        formData.append('idCliente', id);
-        formData.append('nomeOperador', operador);
+    // CORREÇÃO PRINCIPAL: envia como application/x-www-form-urlencoded
+    // O Google Apps Script lê e.parameter corretamente com este Content-Type.
+    // FormData via fetch NÃO popula e.parameter no GAS — por isso os dados chegavam vazios.
+    async function enviarParaPlanilha(nomeCompleto, idCliente, nomeOperador) {
+        const params = new URLSearchParams();
+        params.append('nomeCompleto', nomeCompleto);
+        params.append('idCliente', idCliente);
+        params.append('nomeOperador', nomeOperador);
 
         try {
-            await fetch(GOOGLE_SCRIPT_URL, { method: 'POST', body: formData });
-            console.log("Dados enviados!");
+            await fetch(GOOGLE_SCRIPT_URL, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded'
+                },
+                body: params.toString(),
+                mode: 'no-cors' // necessário para chamadas cross-origin ao GAS
+            });
+            console.log("Dados enviados! Nome:", nomeCompleto, "| ID:", idCliente, "| Operador:", nomeOperador);
         } catch (error) {
             console.error("Erro ao enviar:", error);
         }
@@ -64,10 +80,11 @@
         const botao = document.getElementById(BUTTON_ID);
         if (!h2 || !botao) return;
 
-        const texto = h2.innerText.trim().replace(/\s+/g, ' ');
-        const idCliente = extrairIdCliente(texto);
+        const textoCompleto = h2.innerText.trim().replace(/\s+/g, ' ');
+        const idCliente = extrairIdCliente(textoCompleto);
+        const nomeCliente = extrairNomeCliente(textoCompleto); // nome limpo, sem o [ID]
 
-        // Caso 1: ID extraído do próprio texto
+        // Caso 1: ID extraído do próprio texto — situação mais comum
         if (idCliente) {
             botao.disabled = false;
             botao.style.opacity = "1";
@@ -75,13 +92,14 @@
             botao.onclick = () => {
                 const url = `https://novorevan.brisanet.net.br/#/venda/cliente/${idCliente}/sobre`;
                 window.open(url, "_blank");
-                enviarParaPlanilha(texto, idCliente, getNomeOperador());
+                // Envia nome limpo (sem o [ID]), ID separado e operador
+                enviarParaPlanilha(nomeCliente, idCliente, getNomeOperador());
             };
             return;
         }
 
-        // Caso 2: "Mobile Number, Brazil" → verificar clipboard: CPF vai para pesquisa, ID vai para cliente
-        if (isMobileNumberBrazil(texto)) {
+        // Caso 2: "Mobile Number, Brazil" → verifica clipboard (CPF ou ID numérico)
+        if (isMobileNumberBrazil(textoCompleto)) {
             botao.disabled = false;
             botao.style.opacity = "1";
             botao.title = "Clique para usar o ID ou CPF da área de transferência";
@@ -96,17 +114,18 @@
 
                 const clipboardLimpo = clipboardText.replace(/[\.\-]/g, '').trim();
 
-                // Se for CPF (11 dígitos) → pesquisa por CPF
+                // CPF (11 dígitos) → pesquisa por CPF
                 if (isCPF(clipboardText)) {
                     const url = `https://novorevan.brisanet.net.br/#/pesquisa/Cliente/?q=${clipboardLimpo}`;
                     window.open(url, "_blank");
                     return;
                 }
 
-                // Se for ID numérico → abre diretamente o cliente
+                // ID numérico → abre diretamente o cliente e registra
                 if (/^\d+$/.test(clipboardLimpo)) {
                     const url = `https://novorevan.brisanet.net.br/#/venda/cliente/${clipboardLimpo}/sobre`;
                     window.open(url, "_blank");
+                    enviarParaPlanilha("(via clipboard)", clipboardLimpo, getNomeOperador());
                     return;
                 }
 
@@ -115,7 +134,7 @@
             return;
         }
 
-        // Caso 3: Qualquer outro caso → verificar se há CPF na área de transferência
+        // Caso 3: Qualquer outro caso → busca por CPF da área de transferência
         botao.disabled = false;
         botao.style.opacity = "1";
         botao.title = "Clique para buscar pelo CPF da área de transferência";
@@ -148,9 +167,10 @@
     });
 
     observer.observe(document.body, { childList: true, subtree: true, characterData: true });
-    
-    window.meuScriptObserver = observer; 
-    
+
+    window.meuScriptObserver = observer;
+
     criarBotao();
     atualizarBotao();
+
 })();
